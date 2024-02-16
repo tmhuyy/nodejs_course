@@ -7,12 +7,17 @@ const {
     getTour,
     createTour,
     updateTour,
-    deleteTour
+    deleteTour,
+    validateTourId,
+    validateEnteredTour,
+    autoAddId
 } = require("../controllers/tourControllers")
+
+router.param("id", validateTourId)
 
 router.route("/")
     .get(getAllTours)
-    .post(createTour)
+    .post(autoAddId, validateEnteredTour, createTour)
 
 router.route("/:id")
     .get(getTour)

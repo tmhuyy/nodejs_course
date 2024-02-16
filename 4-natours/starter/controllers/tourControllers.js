@@ -21,21 +21,12 @@ const getTour = (req, res) =>
     const { id: requestedId } = req.params;
 
     console.log(requestedId);
-    const tour = toursData.filter((tour) => tour.id === requestedId);
-
-    if (tour.length === 0)
-    {
-        res.status(404).json({
-            status: 'fail',
-            message: 'Cannot found a tour',
-        });
-        return;
-    }
+    const [tour] = toursData.filter((tour) => tour.id === requestedId);
 
     res.status(200).json({
         status: 'success',
         data: {
-            tour,
+            ...tour,
         },
     });
 };
@@ -43,7 +34,7 @@ const getTour = (req, res) =>
 const createTour = (req, res) =>
 {
     const newTour = {
-        id: uuidv4(),
+        id: req.newID,
         createdAt: req.createdAt,
         ...req.body,
     };
@@ -72,15 +63,6 @@ const updateTour = (req, res) =>
     const enteredTour = req.body;
 
     const [findTour] = toursData.filter((tour) => tour.id === id);
-
-    if (findTour.length === 0)
-    {
-        res.status(404).json({
-            status: 'fail',
-            message: 'Cannot found a tour',
-        });
-        return;
-    }
 
     const updatedTour = {
         ...findTour, // keep id
@@ -126,11 +108,47 @@ const deleteTour = (req, res) =>
     console.log('DEBUG remainTours', remainTours);
 }
 
+const validateTourId = (req, res, next, val) =>
+{
+    const findedTour = toursData.filter((tour) => tour.id === val);
+    console.log(val)
+
+    if (findedTour.length === 0)
+    {
+        return res.status(404).json({
+            status: 'fail',
+            message: 'Cannot found a tour',
+        });
+    }
+    next()
+}
+
+const validateEnteredTour = (req, res, next) =>
+{
+    const data = req.body;
+    if (toursData.some(tour => tour.name === data.name))
+    {
+        return res.status(400).json({
+            status: "fail",
+            message: "A tour name is already existed"
+        })
+    }
+    next()
+}
+
+const autoAddId = (req, res, next) =>
+{
+    req.newID = uuidv4()
+    next()
+}
+
 module.exports = {
     getAllTours,
     getTour,
     createTour,
     updateTour,
-    deleteTour
-
+    deleteTour,
+    validateTourId,
+    validateEnteredTour,
+    autoAddId
 }
